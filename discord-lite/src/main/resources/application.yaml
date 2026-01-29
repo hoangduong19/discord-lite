@@ -16,6 +16,9 @@ spring:
       hibernate:
         format_sql: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
-
+  logging:
+    level:
+      org.springframework.web.socket: DEBUG
+      org.springframework.messaging: DEBUG
 server:
   port: 8080

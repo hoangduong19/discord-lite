@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>STOMP Chat Test</title>
+  <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.0.0/bundles/stomp.umd.min.js"></script>
+</head>
+<body>
+<h3>STOMP Chat Test</h3>
+
+<label>Channel ID:</label>
+<input id="channelId" value="1" /><br><br>
+
+<label>Username:</label>
+<input id="username" /><br><br>
+
+<label>Message:</label>
+<input id="message" />
+<button onclick="send()">Send</button>
+
+<pre id="log"></pre>
+
+<script>
+  let client;
+
+  function log(msg) {
+    document.getElementById("log").textContent += msg + "\n";
+    console.log(msg);
+  }
+
+  function connect() {
+    client = new StompJs.Client({
+      brokerURL: "ws://localhost:8080/ws",
+
+      debug: str => console.log("STOMP:", str),
+
+      onConnect: () => {
+        log("✅ CONNECTED");
+
+        client.subscribe("/topic/channel/1", msg => {
+          log("📩 RECEIVED: " + msg.body);
+        });
+      },
+
+      onWebSocketError: err => {
+        log("❌ WebSocket error");
+        console.error(err);
+      },
+
+      onStompError: frame => {
+        log("❌ STOMP error");
+        console.error(frame);
+      }
+    });
+
+    client.activate();
+  }
+
+  function send() {
+    client.publish({
+      destination: "/app/chat.send",
+      body: JSON.stringify({
+        channelId: 1,
+        content: document.getElementById("message").value
+      })
+    });
+  }
+
+  connect();
+</script>
+</body>
+</html>

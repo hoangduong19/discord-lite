@@ -4,6 +4,9 @@ import com.discordlite.discord_lite.server.dto.CreateServerRequest;
 import com.discordlite.discord_lite.server.dto.CreateServerResponse;
 import com.discordlite.discord_lite.server.entity.Server;
 import com.discordlite.discord_lite.server.service.ServerService;
+import com.discordlite.discord_lite.userServer.dto.JoinServerRequest;
+import com.discordlite.discord_lite.userServer.dto.JoinServerResponse;
+import com.discordlite.discord_lite.userServer.service.UserServerService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -18,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/servers")
 public class ServerController {
     private final ServerService serverService;
+    private final UserServerService userServerService;
 
     @PostMapping("/create")
     public ResponseEntity<CreateServerResponse> createServer(
@@ -33,5 +37,14 @@ public class ServerController {
         );
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @PostMapping("/join")
+    public ResponseEntity<JoinServerResponse> joinServer (
+            @Valid @RequestBody JoinServerRequest request) {
+        JoinServerResponse response = userServerService.joinServer(request.username(), request.inviteCode());
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(response);
     }
 }
