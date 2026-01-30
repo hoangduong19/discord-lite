@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <title>STOMP DM Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.0.0/bundles/stomp.umd.min.js"></script>
+</head>
+<body>
+
+<h3>STOMP DM Test</h3>
+
+<label>My userId:</label>
+<input id="myId" value="2" /><br><br>
+
+<label>Send to userId:</label>
+<input id="targetId" value="1" /><br><br>
+
+<label>Message:</label>
+<input id="message" />
+<button onclick="send()">Send</button>
+
+<hr>
+
+<div id="chat"
+     style="border:1px solid #ccc;
+            padding:10px;
+            width:400px;
+            height:300px;
+            overflow-y:auto;">
+</div>
+
+<script>
+    let client;
+
+    // 🔥 ĐỔI thành channelId DM thật trong DB
+    const dmChannelId = 1;
+
+    function connect() {
+      const myId = Number(document.getElementById("myId").value);
+
+      client = new StompJs.Client({
+        brokerURL: "ws://localhost:8080/ws",
+        debug: str => console.log("STOMP:", str),
+
+        onConnect: () => {
+          appendSystem(`CONNECTED as user ${myId}`);
+
+          client.subscribe("/topic/channel/" + dmChannelId, msg => {
+            const message = JSON.parse(msg.body);
+            renderMessage(message, myId);
+          });
+        }
+      });
+
+      client.activate();
+    }
+
+    function send() {
+      const myId = Number(document.getElementById("myId").value);
+      const targetId = Number(document.getElementById("targetId").value);
+      const content = document.getElementById("message").value;
+
+      if (!content) return;
+
+      client.publish({
+        destination: "/app/chat.send",
+        headers: {
+          senderId: myId   // ⚠️ TEST ONLY
+        },
+        body: JSON.stringify({
+          type: "USER",
+          targetId: targetId,
+          content: content
+        })
+      });
+
+      document.getElementById("message").value = "";
+    }
+
+    function renderMessage(message, myId) {
+      const chat = document.getElementById("chat");
+      const div = document.createElement("div");
+
+      const isMe = message.user.userId === myId;
+
+      div.style.textAlign = isMe ? "right" : "left";
+      div.style.margin = "5px 0";
+
+      div.innerHTML = `
+        <b>${isMe ? "Me" : message.user.username}:</b>
+        ${message.content}
+      `;
+
+      chat.appendChild(div);
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    function appendSystem(text) {
+      const chat = document.getElementById("chat");
+      const div = document.createElement("div");
+
+      div.style.textAlign = "center";
+      div.style.color = "#888";
+      div.style.fontStyle = "italic";
+      div.style.margin = "5px 0";
+
+      div.innerText = text;
+
+      chat.appendChild(div);
+    }
+
+    connect();
+</script>
+
+</body>
+</html>

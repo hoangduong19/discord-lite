@@ -1,5 +1,6 @@
 package com.discordlite.discord_lite.channel.entity;
 
+import com.discordlite.discord_lite.channel.enums.ChannelType;
 import com.discordlite.discord_lite.server.entity.Server;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -23,7 +24,11 @@ public class Channel {
     @Column(name = "channel_name", nullable = false, length = 255)
     private String channelName;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private ChannelType type;
+
     @ManyToOne
-    @JoinColumn(name = "server_id", nullable = false)
+    @JoinColumn(name = "server_id")
     private Server server;
 }
