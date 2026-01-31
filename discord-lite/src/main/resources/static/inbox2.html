@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="UTF-8" />
-    <title>STOMP DM Test</title>
+    <title>Discord Lite – DM Test</title>
     <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.0.0/bundles/stomp.umd.min.js"></script>
 </head>
 <body>
@@ -32,83 +32,134 @@
 <script>
     let client;
 
-    // 🔥 ĐỔI thành channelId DM thật trong DB
+    // 🔥 Channel ID thật trong DB
     const dmChannelId = 1;
 
-    function connect() {
-      const myId = Number(document.getElementById("myId").value);
+    /* =========================
+       LOAD MESSAGE HISTORY (REST)
+       ========================= */
+    async function loadMessages(myId) {
+        const res = await fetch(
+            `http://localhost:8080/channels/${dmChannelId}/messages`
+        );
 
-      client = new StompJs.Client({
-        brokerURL: "ws://localhost:8080/ws",
-        debug: str => console.log("STOMP:", str),
+        const messages = await res.json();
 
-        onConnect: () => {
-          appendSystem(`CONNECTED as user ${myId}`);
-
-          client.subscribe("/topic/channel/" + dmChannelId, msg => {
-            const message = JSON.parse(msg.body);
-            renderMessage(message, myId);
-          });
-        }
-      });
-
-      client.activate();
+        messages.forEach(msg => renderMessageFromRest(msg, myId));
     }
 
+    function renderMessageFromRest(message, myId) {
+        const chat = document.getElementById("chat");
+        const div = document.createElement("div");
+
+        const isMe = message.userId === myId;
+
+        div.style.textAlign = isMe ? "right" : "left";
+        div.style.margin = "5px 0";
+
+        div.innerHTML = `
+            <b>${isMe ? "Me" : message.username}:</b>
+            ${message.content}
+        `;
+
+        chat.appendChild(div);
+    }
+
+    /* =========================
+       CONNECT WEBSOCKET (STOMP)
+       ========================= */
+    async function connect() {
+        const myId = Number(document.getElementById("myId").value);
+
+        // 1️⃣ Load lịch sử trước
+        await loadMessages(myId);
+
+        // Scroll xuống cuối
+        const chat = document.getElementById("chat");
+        chat.scrollTop = chat.scrollHeight;
+
+        // 2️⃣ Kết nối WebSocket
+        client = new StompJs.Client({
+            brokerURL: "ws://localhost:8080/ws",
+            debug: str => console.log("STOMP:", str),
+
+            onConnect: () => {
+                appendSystem(`CONNECTED as user ${myId}`);
+
+                client.subscribe(
+                    "/topic/channel/" + dmChannelId,
+                    msg => {
+                        const message = JSON.parse(msg.body);
+                        renderMessageFromSocket(message, myId);
+                    }
+                );
+            }
+        });
+
+        client.activate();
+    }
+
+    /* =========================
+       SEND MESSAGE
+       ========================= */
     function send() {
-      const myId = Number(document.getElementById("myId").value);
-      const targetId = Number(document.getElementById("targetId").value);
-      const content = document.getElementById("message").value;
+        const myId = Number(document.getElementById("myId").value);
+        const targetId = Number(document.getElementById("targetId").value);
+        const content = document.getElementById("message").value;
 
-      if (!content) return;
+        if (!content) return;
 
-      client.publish({
-        destination: "/app/chat.send",
-        headers: {
-          senderId: myId   // ⚠️ TEST ONLY
-        },
-        body: JSON.stringify({
-          type: "USER",
-          targetId: targetId,
-          content: content
-        })
-      });
+        client.publish({
+            destination: "/app/chat.send",
+            headers: {
+                senderId: myId   // ⚠️ TEST ONLY
+            },
+            body: JSON.stringify({
+            type: "USER",
+                targetId: targetId,
+                content: content
+            })
+        });
 
-      document.getElementById("message").value = "";
+        document.getElementById("message").value = "";
     }
 
-    function renderMessage(message, myId) {
-      const chat = document.getElementById("chat");
-      const div = document.createElement("div");
+    /* =========================
+       RENDER MESSAGE (WEBSOCKET)
+       ========================= */
+    function renderMessageFromSocket(message, myId) {
+        const chat = document.getElementById("chat");
+        const div = document.createElement("div");
 
-      const isMe = message.user.userId === myId;
+        const isMe = message.userId === myId;
 
-      div.style.textAlign = isMe ? "right" : "left";
-      div.style.margin = "5px 0";
+        div.style.textAlign = isMe ? "right" : "left";
+        div.style.margin = "5px 0";
 
-      div.innerHTML = `
-        <b>${isMe ? "Me" : message.user.username}:</b>
-        ${message.content}
-      `;
+        div.innerHTML = `
+            <b>${isMe ? "Me" : message.username}:</b>
+            ${message.content}
+        `;
 
-      chat.appendChild(div);
-      chat.scrollTop = chat.scrollHeight;
+        chat.appendChild(div);
+        chat.scrollTop = chat.scrollHeight;
     }
 
     function appendSystem(text) {
-      const chat = document.getElementById("chat");
-      const div = document.createElement("div");
+        const chat = document.getElementById("chat");
+        const div = document.createElement("div");
 
-      div.style.textAlign = "center";
-      div.style.color = "#888";
-      div.style.fontStyle = "italic";
-      div.style.margin = "5px 0";
+        div.style.textAlign = "center";
+        div.style.color = "#888";
+        div.style.fontStyle = "italic";
+        div.style.margin = "5px 0";
 
-      div.innerText = text;
+        div.innerText = text;
 
-      chat.appendChild(div);
+        chat.appendChild(div);
     }
 
+    // 🔥 AUTO CONNECT
     connect();
 </script>
 

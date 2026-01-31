@@ -4,6 +4,7 @@ import com.discordlite.discord_lite.channel.entity.Channel;
 import com.discordlite.discord_lite.channel.repository.ChannelRepository;
 import com.discordlite.discord_lite.channel.service.ChannelService;
 import com.discordlite.discord_lite.message.dto.ChatMessageRequest;
+import com.discordlite.discord_lite.message.dto.ChatMessageResponse;
 import com.discordlite.discord_lite.message.entity.Message;
 import com.discordlite.discord_lite.message.enums.ChatTargetType;
 import com.discordlite.discord_lite.message.repository.MessageRepository;
@@ -15,6 +16,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -26,6 +28,13 @@ public class MessageService {
     private final ChannelService channelService;
 
     private final SimpMessagingTemplate simpMessagingTemplate;
+
+    public List<ChatMessageResponse> loadAllMessages(Long channelId) {
+        List<Message> messages = messageRepository.findByChannelId(channelId);
+        return messages.stream()
+                .map(ChatMessageResponse::from)
+                .toList();
+    }
 
     @Transactional
     public void sendMessage(Long userId, ChatMessageRequest request) {
@@ -42,7 +51,12 @@ public class MessageService {
 
         Message saved = messageRepository.save(message);
 
-        simpMessagingTemplate.convertAndSend("/topic/channel/" + channel.getChannelId(), saved);
+        ChatMessageResponse response = ChatMessageResponse.from(saved);
+
+        simpMessagingTemplate.convertAndSend(
+                "/topic/channel/" + channel.getChannelId(),
+                response
+        );
     }
 
     private Channel resolveChannel(User sender, ChatMessageRequest request) {
