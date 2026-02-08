@@ -36,6 +36,7 @@ public class ChannelService {
                 .orElseThrow(() -> new RuntimeException("Server not found"));
         Channel channel = new Channel();
         channel.setChannelName(channelName);
+        channel.setType(ChannelType.SERVER);
         channel.setServer(server);
 
         channelRepository.save(channel);
