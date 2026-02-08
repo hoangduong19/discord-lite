@@ -7,15 +7,22 @@ import com.discordlite.discord_lite.permission.repository.PermissionRepository;
 import com.discordlite.discord_lite.role.entity.Role;
 import com.discordlite.discord_lite.role.repository.RoleRepository;
 import com.discordlite.discord_lite.security.CurrentUserService;
+import com.discordlite.discord_lite.server.dto.ServerResponse;
 import com.discordlite.discord_lite.server.entity.Server;
 import com.discordlite.discord_lite.server.repository.ServerRepository;
+import com.discordlite.discord_lite.user.repository.UserRepository;
 import com.discordlite.discord_lite.userRoleServer.compositeKey.UserRoleServerId;
 import com.discordlite.discord_lite.userRoleServer.entity.UserRoleServer;
 import com.discordlite.discord_lite.userRoleServer.repository.UserRoleServerRepository;
+import com.discordlite.discord_lite.userServer.compositeKey.UserServerId;
+import com.discordlite.discord_lite.userServer.entity.UserServer;
+import com.discordlite.discord_lite.userServer.repository.UserServerRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.time.LocalDateTime;
@@ -29,6 +36,8 @@ public class ServerService {
     private final PermissionRepository permissionRepository;
     private final RoleRepository roleRepository;
     private final UserRoleServerRepository userRoleServerRepository;
+    private final UserServerRepository userServerRepository;
+    private final UserRepository userRepository;
 
     private final CurrentUserService currentUserService;
 
@@ -36,10 +45,23 @@ public class ServerService {
     public Server createServer(String serverName) {
         Long userId = currentUserService.getCurrentUserId();
 
+
         Server server = new Server();
         server.setServerName(serverName);
 
         Server savedServer = serverRepository.save(server);
+
+        UserServer userServer = new UserServer();
+        userServer.setUserServerId(
+                new UserServerId(
+                        userId,
+                        savedServer.getServerId()
+                )
+        );
+        userServer.setJoinedAt(Instant.now());
+        userServer.setServer(server);
+        userServer.setUser(userRepository.getReferenceById(userId));
+        userServerRepository.save(userServer);
 
         InviteCode inviteCode = new InviteCode();
         inviteCode.setInviteCodeLink(generateInviteLink());
@@ -78,6 +100,14 @@ public class ServerService {
                         savedServer.getServerId()))
         );
         return savedServer;
+    }
+
+    public List<ServerResponse> getMyServer(Long userId) {
+        List<Server> serverList = userServerRepository.findServersByUserId(userId);
+        return serverList.stream().map(server -> new ServerResponse(
+                server.getServerId(),
+                server.getServerName()
+        )).toList();
     }
 
     private String generateInviteCode() {
