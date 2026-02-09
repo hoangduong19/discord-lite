@@ -18,7 +18,6 @@ import java.security.Principal;
 
 import java.util.List;
 
-@Controller
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("channels")
