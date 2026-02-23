@@ -9,6 +9,7 @@ public record ChatMessageResponse (
        Long messageId,
        Long userId,
        String username,
+       String displayName,
        String content,
        Instant createdAt
 ) {
@@ -17,6 +18,7 @@ public record ChatMessageResponse (
                 message.getMessageId(),
                 message.getUser().getUserId(),
                 message.getUser().getUsername(),
+                message.getUser().getDisplayName(),
                 message.getContent(),
                 message.getCreatedAt()
         );
