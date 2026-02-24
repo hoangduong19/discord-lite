@@ -11,16 +11,7 @@ public record ChatMessageResponse (
        String username,
        String displayName,
        String content,
-       Instant createdAt
+       Instant createdAt,
+       String avatarUrl
 ) {
-    public static ChatMessageResponse from(Message message) {
-        return new ChatMessageResponse(
-                message.getMessageId(),
-                message.getUser().getUserId(),
-                message.getUser().getUsername(),
-                message.getUser().getDisplayName(),
-                message.getContent(),
-                message.getCreatedAt()
-        );
-    }
 }

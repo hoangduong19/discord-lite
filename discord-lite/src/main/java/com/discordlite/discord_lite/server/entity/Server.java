@@ -26,6 +26,9 @@ public class Server {
     @Column(name = "server_name", nullable = false, length = 255)
     private String serverName;
 
+    @Column(name = "avatar_url")
+    private String avatarUrl;
+
     // 1 server có nhiều channel
     @OneToMany(mappedBy = "server")
     private List<Channel> channels;

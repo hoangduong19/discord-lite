@@ -28,6 +28,12 @@ spring:
           auth: true
           starttls:
             enable: true
-
+  jwt:
+    secret: ${JWT_SECRET_KEY}
+  aws:
+    iam-access-key: ${AWS_IAM_ACCESS_KEY}
+    iam-secret-access-key: ${AWS_IAM_SECRET_ACCESS_KEY}
+    aws-region: ${AWS_REGION}
+    bucket-name: ${AWS_BUCKET_NAME}
 server:
   port: 8080

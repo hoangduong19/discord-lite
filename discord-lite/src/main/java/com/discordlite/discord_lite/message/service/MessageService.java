@@ -8,6 +8,7 @@ import com.discordlite.discord_lite.message.dto.ChatMessageResponse;
 import com.discordlite.discord_lite.message.entity.Message;
 import com.discordlite.discord_lite.message.enums.ChatTargetType;
 import com.discordlite.discord_lite.message.repository.MessageRepository;
+import com.discordlite.discord_lite.s3.service.S3Service;
 import com.discordlite.discord_lite.security.CurrentUserService;
 import com.discordlite.discord_lite.user.entity.User;
 import com.discordlite.discord_lite.user.repository.UserRepository;
@@ -29,11 +30,19 @@ public class MessageService {
     private final ChannelService channelService;
     private final SimpMessagingTemplate simpMessagingTemplate;
     private final CurrentUserService currentUserService;
+    private final S3Service s3Service;
 
     public List<ChatMessageResponse> loadAllMessages(Long channelId) {
         List<Message> messages = messageRepository.findByChannelId(channelId);
         return messages.stream()
-                .map(ChatMessageResponse::from)
+                .map(m ->new ChatMessageResponse (
+                        m.getMessageId(),
+                        m.getUser().getUserId(),
+                        m.getUser().getUsername(),
+                        m.getUser().getDisplayName(),
+                        m.getContent(),
+                        m.getCreatedAt(),
+                        s3Service.generatePresignedUrl(m.getUser().getAvatar())))
                 .toList();
     }
 
@@ -52,7 +61,14 @@ public class MessageService {
 
         Message saved = messageRepository.save(message);
 
-        ChatMessageResponse response = ChatMessageResponse.from(saved);
+        ChatMessageResponse response = new ChatMessageResponse (
+                saved.getMessageId(),
+                saved.getUser().getUserId(),
+                saved.getUser().getUsername(),
+                saved.getUser().getDisplayName(),
+                saved.getContent(),
+                saved.getCreatedAt(),
+                s3Service.generatePresignedUrl(saved.getUser().getAvatar()));
 
         simpMessagingTemplate.convertAndSend(
                 "/topic/channel/" + channel.getChannelId(),
