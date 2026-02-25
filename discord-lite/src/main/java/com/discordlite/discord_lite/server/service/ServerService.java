@@ -106,8 +106,17 @@ public class ServerService {
         List<Server> serverList = userServerRepository.findServersByUserId(userId);
         return serverList.stream().map(server -> new ServerResponse(
                 server.getServerId(),
-                server.getServerName()
+                server.getServerName(),
+                server.getAvatarUrl()
         )).toList();
+    }
+
+    public Server findById(Long serverId) {
+        return serverRepository.findById(serverId).orElseThrow(() -> new RuntimeException("Invalid Server"));
+    }
+
+    public void save(Server server) {
+        serverRepository.save(server);
     }
 
     private String generateInviteCode() {
