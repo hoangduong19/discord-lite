@@ -1,46 +1,15 @@
-name: Java CI/CD with Docker
+name: Pro CI/CD Pipeline
 
 on:
   push:
     branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
 
 jobs:
-  # Job 1: Build file JAR (như cũ)
-  build-jar:
+  build-and-push:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-          cache: maven
-      - name: Build with Maven
-        run: mvn -B clean package --file pom.xml
-      
-      # Lưu file JAR lại để Job tiếp theo có thể dùng
-      - name: Upload JAR
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-jar
-          path: target/*.jar
-
-  # Job 2: Build & Push Docker Image
-  build-docker:
-    needs: build-jar # Chỉ chạy nếu Job 1 thành công
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      
-      # Tải file JAR đã build từ Job 1 về lại máy ảo
-      - name: Download JAR
-        uses: actions/download-artifact@v4
-        with:
-          name: app-jar
-          path: target/
+      - name: Checkout code
+        uses: actions/checkout@v4
 
       - name: Login to Docker Hub
         uses: docker/login-action@v3
@@ -48,10 +17,10 @@ jobs:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_TOKEN }}
 
-      - name: Build and push
+      - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
           push: true
-          # Thay 'your-username' bằng tên thật của bạn trên Docker Hub
-          tags: hoangduong19/discord-lite-backend:latest
+          # Luôn dùng biến để tránh sai sót
+          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/discord-lite:latest
