@@ -7,7 +7,7 @@ import com.discordlite.discord_lite.s3.service.S3Service;
 import com.discordlite.discord_lite.security.CurrentUserService;
 import com.discordlite.discord_lite.server.dto.ConfirmServerRequest;
 import com.discordlite.discord_lite.server.entity.Server;
-import com.discordlite.discord_lite.server.service.ServerService;
+import com.discordlite.discord_lite.server.service.publisher.ServerService;
 import com.discordlite.discord_lite.user.entity.User;
 import com.discordlite.discord_lite.user.service.UserService;
 import lombok.RequiredArgsConstructor;

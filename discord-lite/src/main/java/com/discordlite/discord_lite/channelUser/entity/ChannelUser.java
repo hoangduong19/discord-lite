@@ -28,4 +28,10 @@ public class ChannelUser {
     @MapsId("userId")
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
+
+    public ChannelUser(Channel channel, User user) {
+        this.channel = channel;
+        this.user = user;
+        this.channelUserId = new ChannelUserId(channel.getChannelId(), user.getUserId());
+    }
 }

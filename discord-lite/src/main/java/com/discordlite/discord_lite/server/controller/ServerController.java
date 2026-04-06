@@ -5,7 +5,7 @@ import com.discordlite.discord_lite.server.dto.CreateServerRequest;
 import com.discordlite.discord_lite.server.dto.CreateServerResponse;
 import com.discordlite.discord_lite.server.dto.ServerResponse;
 import com.discordlite.discord_lite.server.entity.Server;
-import com.discordlite.discord_lite.server.service.ServerService;
+import com.discordlite.discord_lite.server.service.publisher.ServerService;
 import com.discordlite.discord_lite.userServer.dto.JoinServerRequest;
 import com.discordlite.discord_lite.userServer.dto.JoinServerResponse;
 import com.discordlite.discord_lite.userServer.service.UserServerService;

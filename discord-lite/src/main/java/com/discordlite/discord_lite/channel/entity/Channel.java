@@ -1,7 +1,13 @@
 package com.discordlite.discord_lite.channel.entity;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.discordlite.discord_lite.channel.enums.ChannelType;
+import com.discordlite.discord_lite.channelUser.entity.ChannelUser;
 import com.discordlite.discord_lite.server.entity.Server;
+import com.discordlite.discord_lite.user.entity.User;
+
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -31,4 +37,25 @@ public class Channel {
     @ManyToOne
     @JoinColumn(name = "server_id")
     private Server server;
+
+    @OneToMany(mappedBy = "channel", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ChannelUser> members = new ArrayList<>();
+
+    public void addMember(User user) {
+        ChannelUser channelUser = new ChannelUser(this, user);
+        this.members.add(channelUser);
+    }
+
+    public static Channel createDirectMessage(User a, User b) {
+        Channel channel = new Channel();
+        channel.setType(ChannelType.DIRECT);
+        channel.setChannelName("DM"); // Hoặc logic tên: a.getName() + " & " + b.getName()
+        channel.setServer(null);
+        
+        // Tận dụng luôn hàm addMember đã viết
+        channel.addMember(a);
+        channel.addMember(b);
+        
+        return channel;
+    }
 }

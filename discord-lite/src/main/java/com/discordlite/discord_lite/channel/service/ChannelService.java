@@ -4,9 +4,6 @@ import com.discordlite.discord_lite.channel.dto.CreateChannelResponse;
 import com.discordlite.discord_lite.channel.entity.Channel;
 import com.discordlite.discord_lite.channel.enums.ChannelType;
 import com.discordlite.discord_lite.channel.repository.ChannelRepository;
-import com.discordlite.discord_lite.channelUser.compositeKey.ChannelUserId;
-import com.discordlite.discord_lite.channelUser.entity.ChannelUser;
-import com.discordlite.discord_lite.channelUser.repository.ChannelUserRepository;
 import com.discordlite.discord_lite.permission.constant.PermissionConstant;
 import com.discordlite.discord_lite.permission.service.PermissionService;
 import com.discordlite.discord_lite.security.CurrentUserService;
@@ -25,7 +22,6 @@ import java.util.Optional;
 public class ChannelService {
     private final ChannelRepository channelRepository;
     private final ServerRepository serverRepository;
-    private final ChannelUserRepository channelUserRepository;
     private final CurrentUserService currentUserService;
     private final PermissionService permissionService;
     public Channel createChannel (Long serverId, String channelName) {
@@ -54,50 +50,12 @@ public class ChannelService {
 
     @Transactional
     public Channel getOrCreateDirectChannel(User a, User b) {
-
-        //Tìm DM đã tồn tại
-        Optional<Channel> existing =
-                channelRepository.findDirectChannelBetween(
-                        a.getUserId(),
-                        b.getUserId()
-                );
+        Optional<Channel> existing = channelRepository.findDirectChannelBetween(a.getUserId(), b.getUserId());
 
         if (existing.isPresent()) {
             return existing.get();
         }
-
-        //Chưa có → tạo mới
-        Channel channel = new Channel();
-        channel.setType(ChannelType.DIRECT);
-        channel.setChannelName("DM");
-        channel.setServer(null);
-
-        Channel savedChannel = channelRepository.save(channel);
-
-        //Add member A
-        channelUserRepository.save(
-                new ChannelUser(
-                        new ChannelUserId(
-                                savedChannel.getChannelId(),
-                                a.getUserId()
-                        ),
-                        savedChannel,
-                        a
-                )
-        );
-
-        // Add member B
-        channelUserRepository.save(
-                new ChannelUser(
-                        new ChannelUserId(
-                                savedChannel.getChannelId(),
-                                b.getUserId()
-                        ),
-                        savedChannel,
-                        b
-                )
-        );
-
-        return savedChannel;
+        Channel channel = Channel.createDirectMessage(a, b);
+        return channelRepository.save(channel);
     }
 }
